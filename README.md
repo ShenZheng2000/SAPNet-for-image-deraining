@@ -15,7 +15,8 @@ First, download training and testing dataset from either link
 Next, create new folders called dataset. Then create sub-folders called train and test under that folder. Finally, place the unzipped folders into `./datasets/train/` (training data) and `./datasets/test/` (testing data)
 
 # Training
-'python train.py'
+Run the following script in terminal
+`python train.py`
 
 # Testing
 TO DO
