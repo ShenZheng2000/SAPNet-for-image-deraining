@@ -126,12 +126,9 @@ def main():
 
             # Negative SSIM loss
             loss = -pixel_metric
-            print("ssim loss is", loss)
 
             # Segmentation loss
             seg_loss = SegLoss(input_train, out_train)
-            print("seg loss is", seg_loss)
-
 
             # calculate total loss
             total_loss = loss + seg_loss
