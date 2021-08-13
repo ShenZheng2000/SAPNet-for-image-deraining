@@ -1,12 +1,7 @@
-# This is Model1 of SAPNet.
-# The derain net uses depthwise conv
-# The seg net uses fpn
-
 import argparse
 import torch.optim as optim
 import torchvision.utils as utils
 from torch.utils.data import DataLoader
-from tensorboardX import SummaryWriter
 from Modeling.DerainDataset import *
 from Modeling.utils import *
 from Modeling.Contrastive.Mix import *
@@ -14,11 +9,12 @@ from torch.optim.lr_scheduler import MultiStepLR
 from Modeling.SSIM import SSIM
 from Modeling.network import *
 from Modeling.fpn import *
+import sys
 
 
 parser = argparse.ArgumentParser(description="SAPNet_train")
-parser.add_argument("--preprocess", type=bool, default=True, help='run prepare_data or not')
-parser.add_argument("--batch_size", type=int, default=12, help="Training batch size") # default is 16
+parser.add_argument("--preprocess", type=bool, default=False, help='run prepare_data or not')
+parser.add_argument("--batch_size", type=int, default=8, help="Training batch size") # default is 16
 parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs")
 parser.add_argument("--milestone", type=int, default=[30, 50, 80], help="When to decay learning rate")
 parser.add_argument("--lr", type=float, default=1e-3, help="initial learning rate")
@@ -77,11 +73,14 @@ def SegLoss(input_train, out_train):
 
 def main():
 
-    print('Loading dataset ...\n')
+    print('Loading Synthetic Rainy dataset ...\n')
     dataset_train = Dataset(data_path=opt.data_path)
     loader_train = DataLoader(dataset=dataset_train, num_workers=0,
                               batch_size=opt.batch_size, shuffle=True)
     print("# of training samples: %d\n" % int(len(dataset_train)))
+
+    print('Loading Real Rainy dataset ...\n')
+
 
     # Build deraining model
     model = SAPNet(recurrent_iter=opt.recurrent_iter,
@@ -95,23 +94,19 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=opt.lr)
     scheduler = MultiStepLR(optimizer, milestones=opt.milestone, gamma=0.2)  # learning rates
 
-    # record training
-    writer = SummaryWriter(opt.save_path)
-
     # load the lastest model
     initial_epoch = findLastCheckpoint(save_dir=opt.save_path)
     if initial_epoch > 0:
         print('resuming by loading epoch %d' % initial_epoch)
         model.load_state_dict(torch.load(os.path.join(opt.save_path, 'net_epoch%d.pth' % initial_epoch)))
 
-    # start training
-    step = 0
+    # Start training
     for epoch in range(initial_epoch, opt.epochs):
         scheduler.step(epoch)
         for param_group in optimizer.param_groups:
             print('learning rate %f' % param_group["lr"])
 
-        # epoch training start
+        # Phase 1 Training (Synthetic images)
         for i, (input_train, target_train) in enumerate(loader_train, 0):
             model.train()
             model.zero_grad()
@@ -122,22 +117,18 @@ def main():
             # Obtain the derained image and calculate ssim loss
             out_train, _ = model(input_train)
 
+            #print("input_train", input_train.size()) # torch.Size([batch_size, 3, 100, 100])
+            #print("target_train", target_train.size()) # torch.Size([batch_size, 3, 100, 100])
+            #print("out_train", out_train.size()) # torch.Size([batch_size, 3, 100, 100])
+
             pixel_metric = criterion(target_train, out_train)
 
             # Negative SSIM loss
             loss = -pixel_metric
 
-            # Segmentation loss
-            seg_loss = SegLoss(input_train, out_train)
-
-            # calculate total loss
-            total_loss = loss + seg_loss
-
             # backward and update parameters.
-            total_loss.backward()
+            loss.backward()
             optimizer.step()
-
-
 
             ####### Right now Keep this part unmodified
             model.eval()
@@ -145,24 +136,31 @@ def main():
             out_train = torch.clamp(out_train, 0., 1.)
             psnr_train = batch_PSNR(out_train, target_train, 1.)
             print("[epoch %d][%d/%d] loss: %.4f, pixel_metric: %.4f, PSNR: %.4f" %
-                  (epoch + 1, i + 1, len(loader_train), total_loss.item(), pixel_metric.item(), psnr_train))
+                  (epoch + 1, i + 1, len(loader_train), loss.item(), pixel_metric.item(), psnr_train))
 
-            if step % 10 == 0:
-                # Log the scalar values
-                writer.add_scalar('loss', total_loss.item(), step)
-                writer.add_scalar('PSNR on training data', psnr_train, step)
-            step += 1
+        # Phase 2 Training (Real images)
+        # TODO: Define loader_train_two
 
-        # log the images
-        model.eval()
-        out_train, _ = model(input_train)
-        out_train = torch.clamp(out_train, 0., 1.)
-        im_target = utils.make_grid(target_train.data, nrow=8, normalize=True, scale_each=True)
-        im_input = utils.make_grid(input_train.data, nrow=8, normalize=True, scale_each=True)
-        im_derain = utils.make_grid(out_train.data, nrow=8, normalize=True, scale_each=True)
-        writer.add_image('clean image', im_target, epoch+1)
-        writer.add_image('rainy image', im_input, epoch+1)
-        writer.add_image('deraining image', im_derain, epoch+1)
+        '''for i, input_train in enumerate(loader_train_two, 0):
+            model.train()
+            model.zero_grad()
+            optimizer.zero_grad()
+
+            input_train = Variable(input_train).to(device)
+
+            # Obtain the derained image and calculate ssim loss
+            out_train, _ = model(input_train)
+
+            print("input_train", input_train.size())
+            print("out_train", out_train.size())
+
+            # Segmentation loss
+            seg_loss = SegLoss(input_train, out_train)
+
+            # backward and update parameters.
+            seg_loss.backward()
+            optimizer.step()'''
+
 
         # save model
         torch.save(model.state_dict(), os.path.join(opt.save_path, 'net_latest.pth'))
