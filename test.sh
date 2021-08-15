@@ -1,4 +1,4 @@
-#! bash
+#!/bin/bash
 
 # SAPNet 1
 python test.py  --logdir logs/SAPNet/Model1 --save_path results/SAPNet/Model1 --data_path datasets/test/Rain100H/rainy
