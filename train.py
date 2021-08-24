@@ -1,77 +1,27 @@
-# This is Model1 of SAPNet.
-# The derain net uses depthwise conv
-# The seg net uses fpn
-
-import argparse
 import torch.optim as optim
-import torchvision.utils as utils
 from torch.utils.data import DataLoader
 from Modeling.DerainDataset import *
 from Modeling.utils import *
-from Modeling.Contrastive.Mix import *
 from torch.optim.lr_scheduler import MultiStepLR
 from Modeling.SSIM import SSIM
 from Modeling.network import *
 from Modeling.fpn import *
-import sys
 from torchvision import datasets, transforms
+from option import *
 
-
-parser = argparse.ArgumentParser(description="SAPNet_train")
-parser.add_argument("--gpu_id", type=str, default="0", help='GPU id')
-parser.add_argument("--preprocess", type=bool, default=False, help='run prepare_data or not')
-parser.add_argument("--batch_size", type=int, default=4, help="Training batch size") # default is 16
-parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs")
-parser.add_argument("--milestone", type=int, default=[30, 50, 80], help="When to decay learning rate")
-parser.add_argument("--lr", type=float, default=1e-3, help="initial learning rate")
-parser.add_argument("--save_path", type=str, default="logs/SAPNet/Model1", help='path to save models and log files')
-parser.add_argument("--save_freq", type=int, default=1, help='save intermediate model')
-parser.add_argument("--data_path", type=str, default="datasets/train/RainTrainH", help='path to training data')
-parser.add_argument("--data_path_real", type=str, default="C:/Users/yons/Desktop/CODE/AAAI_2022/datasets/real_input", help='path to training data of real rain')
-
-parser.add_argument("--use_contrast", type=bool, default=True, help='use contrasive regularization or not')
-parser.add_argument("--use_stage1", type=bool, default=True, help='use stage1: train on synthesize image or not')
-parser.add_argument("--use_stage2", type=bool, default=True, help='use stage2: train on real image or not')
-
-parser.add_argument("--recurrent_iter", type=int, default=6, help='number of recursive stages')
-parser.add_argument("--num_of_SegClass", type=int, default=21, help='Number of Segmentation Classes, default VOC = 21')
-
-opt = parser.parse_args()
-
-if torch.cuda.is_available():
-    os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_id
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
-
-################## USRA block starts here ################
-def SegLoss(input_train, out_train):
-    # TODO: (1) Seg is too large, consider scale with 0.1  (2) Try Segment the Image, not the rain residual
-    # Build Segmentation model
-    seg = fpn(opt.num_of_SegClass).to(device)
+def SegLoss(out_train):
+    num_of_SegClass = 21
+    seg = fpn(num_of_SegClass).to(device)
     seg_criterion = FocalLoss(gamma=2).to(device)
 
-    # Build and clip residual image
-    out_train = torch.clamp(input_train - out_train, 0., 1.)
-
-    # Build and dmean seg. input (maybe clip image before)
-    seg_input = out_train.data.cpu().numpy()
-    for n in range(out_train.size()[0]):
-        seg_input[n, :, :, :] = rgb_demean(seg_input[n, :, :, :])
-
-    # send seg. input to cuda
-    seg_input = Variable(torch.from_numpy(seg_input).to(device))
-
     # build seg. output
-    seg_output = seg(seg_input)
+    seg_output = seg(out_train).to(device)
 
     # build seg. target
-    target = (get_NoGT_target(seg_output)).data.cpu()
-    target_ = resize_target(target, seg_output.size(2))
-    target_ = torch.from_numpy(target_).long().to(device)
+    target = (get_NoGT_target(seg_output)).to(device)
 
-    # calculate seg. loss
-    seg_loss = seg_criterion(seg_output, target_).to(device)
+    # Get seg. loss
+    seg_loss = seg_criterion(seg_output, target).to(device)
 
     # freeze seg. backpropagation
     for param in seg.parameters():
@@ -79,13 +29,32 @@ def SegLoss(input_train, out_train):
 
     return seg_loss
 
+
+
 data_transfrom = transforms.Compose([
         transforms.RandomCrop(100, 100),
         transforms.ToTensor()
     ])
 
 
-def main():
+def train():
+
+    if torch.cuda.is_available():
+        os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_id
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if opt.preprocess:
+        if opt.data_path.find('RainTrainH') != -1:
+            print(opt.data_path.find('RainTrainH'))
+            prepare_data_RainTrainH(data_path=opt.data_path, patch_size=100, stride=80)
+        elif opt.data_path.find('RainTrainL') != -1:
+            prepare_data_RainTrainL(data_path=opt.data_path, patch_size=100, stride=80)
+        elif opt.data_path.find('Rain12600') != -1:
+            prepare_data_Rain12600(data_path=opt.data_path, patch_size=100, stride=100)
+        else:
+            print('unkown datasets: please define prepare data function in DerainDataset.py')
+
     print('Loading Synthetic Rainy dataset ...\n')
     dataset_train = Dataset(data_path=opt.data_path)
     loader_train = DataLoader(dataset=dataset_train,
@@ -170,11 +139,8 @@ def main():
                 # Obtain the derained image and calculate ssim loss
                 out_train_real, _ = model(input_train_real)
 
-                #print("input_train", input_train_real.size())
-                #print("out_train", out_train_real.size())
-
                 # Segmentation loss
-                seg_loss = SegLoss(input_train_real, out_train_real)
+                seg_loss = SegLoss(out_train_real)
 
                 # backward and update parameters.
                 seg_loss.backward()
@@ -190,16 +156,4 @@ def main():
 
 
 if __name__ == "__main__":
-    if opt.preprocess:
-        if opt.data_path.find('RainTrainH') != -1:
-            print(opt.data_path.find('RainTrainH'))
-            prepare_data_RainTrainH(data_path=opt.data_path, patch_size=100, stride=80)
-        elif opt.data_path.find('RainTrainL') != -1:
-            prepare_data_RainTrainL(data_path=opt.data_path, patch_size=100, stride=80)
-        elif opt.data_path.find('Rain12600') != -1:
-            prepare_data_Rain12600(data_path=opt.data_path, patch_size=100, stride=100)
-        else:
-            print('unkown datasets: please define prepare data function in DerainDataset.py')
-
-
-    main()
+    train()
