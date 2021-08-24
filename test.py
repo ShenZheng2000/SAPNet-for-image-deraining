@@ -1,25 +1,15 @@
-import argparse
 from Modeling.DerainDataset import *
 from Modeling.utils import *
-from Modeling.SSIM import SSIM
 from Modeling.network import *
-import time 
+import time
+from option import *
 
-parser = argparse.ArgumentParser(description="PReNet_Test")
-parser.add_argument("--logdir", type=str, default="logs/PReNet6/", help='path to model and log files')
-parser.add_argument("--data_path", type=str, default="/media/r/BC580A85580A3F20/dataset/rain/peku/Rain100H/rainy", help='path to training data')
-parser.add_argument("--save_path", type=str, default="/home/r/works/derain_arxiv/release/results/PReNet", help='path to save results')
-parser.add_argument("--use_GPU", type=bool, default=True, help='use GPU or not')
-parser.add_argument("--gpu_id", type=str, default="0", help='GPU id')
-parser.add_argument("--recurrent_iter", type=int, default=6, help='number of recursive stages')
-parser.add_argument("--use_contrast", type=bool, default=True, help='use contrasive regularization or not') # TODO: be the same as the train.py (F->T->T)
-opt = parser.parse_args()
+# TODO: change some parameters (be cons. with train.py)
+def test():
+    if torch.cuda.is_available():
+        os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_id
 
-if opt.use_GPU:
-    os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_id
-
-
-def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     os.makedirs(opt.save_path, exist_ok=True)
 
@@ -30,7 +20,7 @@ def main():
     print_network(model)
     if opt.use_GPU:
         model = model.cuda()
-    model.load_state_dict(torch.load(os.path.join(opt.logdir, 'net_latest.pth'), map_location='cpu'))
+    model.load_state_dict(torch.load(os.path.join(opt.logdir, 'net_latest.pth'), map_location=device))
     model.eval()
 
     time_test = 0
@@ -85,5 +75,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-
+    test()
