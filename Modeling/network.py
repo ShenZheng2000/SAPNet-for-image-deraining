@@ -5,10 +5,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-from .Mix import Mix
+import math
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Depthwise Separable Convolution
 class CSDN_Tem(nn.Module):
@@ -35,6 +36,32 @@ class CSDN_Tem(nn.Module):
         out = self.depth_conv(input)
         out = self.point_conv(out)
         return out
+
+# Ghost Convolution
+class GhostModule(nn.Module):
+    def __init__(self, inp, oup, kernel_size=1, ratio=2, dw_size=3, stride=1, relu=True):
+        super(GhostModule, self).__init__()
+        self.oup = oup
+        init_channels = math.ceil(oup / ratio)
+        new_channels = init_channels*(ratio-1)
+
+        self.primary_conv = nn.Sequential(
+            nn.Conv2d(inp, init_channels, kernel_size, stride, kernel_size//2, bias=False),
+            nn.BatchNorm2d(init_channels),
+            nn.ReLU(inplace=True) if relu else nn.Sequential(),
+        )
+
+        self.cheap_operation = nn.Sequential(
+            nn.Conv2d(init_channels, new_channels, dw_size, 1, dw_size//2, groups=init_channels, bias=False),
+            nn.BatchNorm2d(new_channels),
+            nn.ReLU(inplace=True) if relu else nn.Sequential(),
+        )
+
+    def forward(self, x):
+        x1 = self.primary_conv(x)
+        x2 = self.cheap_operation(x1)
+        out = torch.cat([x1,x2], dim=1)
+        return out[:,:self.oup,:,:]
 
 # Pixel attention
 class PALayer(nn.Module):
@@ -118,103 +145,54 @@ class PRALayer(nn.Module):
 
 
 class SAPNet(nn.Module):
-    def __init__(self, recurrent_iter=6, use_Contrast=False):
+    def __init__(self, recurrent_iter=6, use_Contrast=False, use_ghost = False):
         super(SAPNet, self).__init__()
         self.iteration = recurrent_iter
         self.use_Contrast = use_Contrast
-        self.mix = Mix(m=-0.8)
+        self.use_ghost = use_ghost
+        self.block = GhostModule if self.use_ghost else CSDN_Tem
 
         self.conv0 = nn.Sequential(
             #nn.Conv2d(6, 32, 3, 1, 1),
-            CSDN_Tem(6, 32),
+            self.block(6, 32),
             nn.ReLU()
         )
 
         # Residual Attention block
-        self.res_conv1 = nn.Sequential(
+        self.res_conv = nn.Sequential(
             #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
+            self.block(32, 32),
             nn.ReLU(),
             #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
+            self.block(32, 32),
+            #CRALayer(channel=32, reduction=16),
+            #PRALayer(channel=32, reduction=16),
             nn.ReLU()
         )
 
-        self.res_conv2 = nn.Sequential(
-            #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
-            nn.ReLU(),
-            #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
-            nn.ReLU()
-        )
-        self.res_conv3 = nn.Sequential(
-            #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
-            nn.ReLU(),
-            #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
-            nn.ReLU()
-        )
-        self.res_conv4 = nn.Sequential(
-            #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
-            nn.ReLU(),
-            #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
-            nn.ReLU()
-        )
-        self.res_conv5 = nn.Sequential(
-            #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
-            nn.ReLU(),
-            #nn.Conv2d(32, 32, 3, 1, 1),
-            CSDN_Tem(32, 32),
-            CRALayer(channel=32, reduction=16),
-            PRALayer(channel=32, reduction=16),
-            nn.ReLU()
-        )
         self.conv_i = nn.Sequential(
             #nn.Conv2d(32 + 32, 32, 3, 1, 1),
-            CSDN_Tem(32 + 32, 32),
+            self.block(32 + 32, 32),
             nn.Sigmoid()
         )
         self.conv_f = nn.Sequential(
             #nn.Conv2d(32 + 32, 32, 3, 1, 1),
-            CSDN_Tem(32 + 32, 32),
+            self.block(32 + 32, 32),
             nn.Sigmoid()
         )
         self.conv_g = nn.Sequential(
             #nn.Conv2d(32 + 32, 32, 3, 1, 1),
-            CSDN_Tem(32 + 32, 32),
+            self.block(32 + 32, 32),
             nn.Tanh()
         )
         self.conv_o = nn.Sequential(
             #nn.Conv2d(32 + 32, 32, 3, 1, 1),
-            CSDN_Tem(32 + 32, 32),
+            self.block(32 + 32, 32),
             nn.Sigmoid()
         )
         self.conv = nn.Sequential(
             #nn.Conv2d(32, 3, 3, 1, 1),
-            CSDN_Tem(32, 3),
+            self.block(32, 3),
         )
 
     def forward(self, input):
@@ -242,15 +220,15 @@ class SAPNet(nn.Module):
 
             x = h
             resx = x
-            x = F.relu(self.res_conv1(x) + resx)
+            x = F.relu(self.res_conv(x) + resx)
             resx = x
-            x = F.relu(self.res_conv2(x) + resx)
+            x = F.relu(self.res_conv(x) + resx)
             resx = x
-            x = F.relu(self.res_conv3(x) + resx)
+            x = F.relu(self.res_conv(x) + resx)
             resx = x
-            x = F.relu(self.res_conv4(x) + resx)
+            x = F.relu(self.res_conv(x) + resx)
             resx = x
-            x = F.relu(self.res_conv5(x) + resx)
+            x = F.relu(self.res_conv(x) + resx)
             x = self.conv(x)
 
             if self.use_Contrast:
