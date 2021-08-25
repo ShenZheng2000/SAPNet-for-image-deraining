@@ -8,6 +8,8 @@ from Modeling.network import *
 from Modeling.fpn import *
 from torchvision import datasets, transforms
 from option import *
+from loss_fun import *
+import torch.nn as nn
 
 def SegLoss(out_train):
     num_of_SegClass = 21
@@ -31,18 +33,17 @@ def SegLoss(out_train):
 
 
 
-data_transfrom = transforms.Compose([
+def train():
+    data_transfrom = transforms.Compose([
         transforms.RandomCrop(100, 100),
         transforms.ToTensor()
     ])
 
-
-def train():
-
-    if torch.cuda.is_available():
-        os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_id
+    '''if torch.cuda.is_available():
+        os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_id'''
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device_ids = [Id for Id in range(torch.cuda.device_count())]
 
     if opt.preprocess:
         if opt.data_path.find('RainTrainH') != -1:
@@ -71,12 +72,13 @@ def train():
                            shuffle=True)
 
     # Build deraining model
-    model = SAPNet(recurrent_iter=opt.recurrent_iter,
-                   use_Contrast=opt.use_contrast).to(device)
+    model = SAPNet(recurrent_iter=opt.recurrent_iter, use_ghost=opt.use_ghost).to(device)
+    model = nn.DataParallel(model, device_ids=device_ids)
     print_network(model)
 
-    # Define SSIM
+    # Define SSIM and constrative loss
     criterion = SSIM().to(device)
+    loss_C = ContrastLoss().to(device)
 
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=opt.lr)
@@ -113,7 +115,15 @@ def train():
                 pixel_metric = criterion(target_train, out_train)
 
                 # Negative SSIM loss
-                loss = -pixel_metric
+                loss_ssim = -pixel_metric
+                #print("loss_ssim", loss_ssim)
+
+                # Constrative loss
+                loss_contrast = loss_C(out_train, target_train, input_train) if opt.use_contrast else 0
+                #print("loss_contrast", loss_contrast)
+
+                # Total loss
+                loss = loss_ssim + loss_contrast
 
                 # backward and update parameters.
                 loss.backward()
@@ -124,7 +134,8 @@ def train():
                 out_train, _ = model(input_train)
                 out_train = torch.clamp(out_train, 0., 1.)
                 psnr_train = batch_PSNR(out_train, target_train, 1.)
-                print("[epoch %d][%d/%d] loss: %.4f, pixel_metric: %.4f, PSNR: %.4f" %
+                if i % 50 == 0:
+                    print("[epoch %d][%d/%d] loss: %.4f, pixel_metric: %.4f, PSNR: %.4f" %
                       (epoch + 1, i + 1, len(loader_train), loss.item(), pixel_metric.item(), psnr_train))
 
         if opt.use_stage2:
@@ -146,7 +157,8 @@ def train():
                 seg_loss.backward()
                 optimizer.step()
 
-                print("[epoch %d][%d/%d] loss: %.4f" %
+                if i % 50 == 0:
+                    print("[epoch %d][%d/%d] loss: %.4f" %
                       (epoch + 1, i + 1, len(imgLoader), seg_loss.item()))
 
         # save model
