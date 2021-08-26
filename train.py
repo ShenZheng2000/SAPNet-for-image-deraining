@@ -1,171 +1,72 @@
-import torch.optim as optim
-from torch.utils.data import DataLoader
 from Modeling.DerainDataset import *
 from Modeling.utils import *
-from torch.optim.lr_scheduler import MultiStepLR
-from Modeling.SSIM import SSIM
 from Modeling.network import *
-from Modeling.fpn import *
-from torchvision import datasets, transforms
+import time
 from option import *
-from loss_fun import *
-import torch.nn as nn
 
-def SegLoss(out_train):
-    num_of_SegClass = 21
-    seg = fpn(num_of_SegClass).to(device)
-    seg_criterion = FocalLoss(gamma=2).to(device)
-
-    # build seg. output
-    seg_output = seg(out_train).to(device)
-
-    # build seg. target
-    target = (get_NoGT_target(seg_output)).to(device)
-
-    # Get seg. loss
-    seg_loss = seg_criterion(seg_output, target).to(device)
-
-    # freeze seg. backpropagation
-    for param in seg.parameters():
-        param.requires_grad = False
-
-    return seg_loss
-
-
-
-def train():
-    data_transfrom = transforms.Compose([
-        transforms.RandomCrop(100, 100),
-        transforms.ToTensor()
-    ])
-
+def test():
     '''if torch.cuda.is_available():
         os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_id'''
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device_ids = [Id for Id in range(torch.cuda.device_count())]
 
-    if opt.preprocess:
-        if opt.data_path.find('RainTrainH') != -1:
-            print(opt.data_path.find('RainTrainH'))
-            prepare_data_RainTrainH(data_path=opt.data_path, patch_size=100, stride=80)
-        elif opt.data_path.find('RainTrainL') != -1:
-            prepare_data_RainTrainL(data_path=opt.data_path, patch_size=100, stride=80)
-        elif opt.data_path.find('Rain12600') != -1:
-            prepare_data_Rain12600(data_path=opt.data_path, patch_size=100, stride=100)
-        else:
-            print('unkown datasets: please define prepare data function in DerainDataset.py')
+    os.makedirs(opt.output_path, exist_ok=True)
 
-    print('Loading Synthetic Rainy dataset ...\n')
-    dataset_train = Dataset(data_path=opt.data_path)
-    loader_train = DataLoader(dataset=dataset_train,
-                              num_workers=0,
-                              batch_size=opt.batch_size,
-                              shuffle=True)
-    print("# of training samples: %d\n" % int(len(dataset_train)))
-
-    print('Loading Real Rainy dataset ...\n')
-    img = datasets.ImageFolder(opt.data_path_real,
-                               transform=data_transfrom)
-    imgLoader = DataLoader(dataset=img,
-                           batch_size=opt.batch_size,
-                           shuffle=True)
-
-    # Build deraining model
+    # Build model
+    print('Loading model ...\n')
     model = SAPNet(recurrent_iter=opt.recurrent_iter, use_dilation=opt.use_dilation).to(device)
-    model = nn.DataParallel(model, device_ids=device_ids)
     print_network(model)
+    model = model.to(device)
+    model = nn.DataParallel(model, device_ids=device_ids)
+    model.load_state_dict(torch.load(os.path.join(opt.save_path, 'net_latest.pth'), map_location=device))
+    model.eval()
 
-    # Define SSIM and constrative loss
-    criterion = SSIM().to(device)
-    loss_C = ContrastLoss().to(device)
+    time_test = 0
+    count = 0
+    for img_name in os.listdir(opt.test_data_path):
+        if is_image(img_name):
+            img_path = os.path.join(opt.test_data_path, img_name)
 
-    # Optimizer
-    optimizer = optim.Adam(model.parameters(), lr=opt.lr)
-    scheduler = MultiStepLR(optimizer, milestones=opt.milestone, gamma=0.2)  # learning rates
+            # input image
+            y = cv2.imread(img_path)
+            b, g, r = cv2.split(y)
+            y = cv2.merge([r, g, b])
 
-    # load the lastest model
-    initial_epoch = findLastCheckpoint(save_dir=opt.save_path)
-    if initial_epoch > 0:
-        print('resuming by loading epoch %d' % initial_epoch)
-        model.load_state_dict(torch.load(os.path.join(opt.save_path, 'net_epoch%d.pth' % initial_epoch)))
+            y = normalize(np.float32(y))
+            y = np.expand_dims(y.transpose(2, 0, 1), 0)
+            y = Variable(torch.Tensor(y)).to(device)
 
-    # Start training
-    for epoch in range(initial_epoch, opt.epochs):
-        scheduler.step(epoch)
-        for param_group in optimizer.param_groups:
-            print('learning rate %f' % param_group["lr"])
+            with torch.no_grad(): #
+                if torch.cuda.is_available():
+                    torch.cuda.synchronize()
+                start_time = time.time()
 
-        if opt.use_stage1:
-            # Phase 1 Training (Synthetic images)
-            for i, (input_train, target_train) in enumerate(loader_train, 0):
-                model.train()
-                model.zero_grad()
-                optimizer.zero_grad()
+                out, _ = model(y)
+                out = torch.clamp(out, 0., 1.)
 
-                input_train, target_train = Variable(input_train).to(device), Variable(target_train).to(device)
+                if torch.cuda.is_available():
+                    torch.cuda.synchronize()
+                end_time = time.time()
+                dur_time = end_time - start_time
+                time_test += dur_time
 
-                # Obtain the derained image and calculate ssim loss
-                out_train, _ = model(input_train)
+                print(img_name, ': ', dur_time)
 
-                #print("input_train", input_train.size()) # torch.Size([batch_size, 3, 100, 100])
-                #print("target_train", target_train.size()) # torch.Size([batch_size, 3, 100, 100])
-                #print("out_train", out_train.size()) # torch.Size([batch_size, 3, 100, 100])
+            if torch.cuda.is_available():
+                save_out = np.uint8(255 * out.data.cpu().numpy().squeeze())   #back to cpu
+            else:
+                save_out = np.uint8(255 * out.data.numpy().squeeze())
 
-                pixel_metric = criterion(target_train, out_train)
+            save_out = save_out.transpose(1, 2, 0)
+            b, g, r = cv2.split(save_out)
+            save_out = cv2.merge([r, g, b])
 
-                # Negative SSIM loss
-                loss_ssim = -pixel_metric
-                #print("loss_ssim", loss_ssim)
+            cv2.imwrite(os.path.join(opt.output_path, img_name), save_out)
 
-                # Constrative loss
-                loss_contrast = loss_C(out_train, target_train, input_train) if opt.use_contrast else 0
-                #print("loss_contrast", loss_contrast)
+            count += 1
 
-                # Total loss
-                loss = loss_ssim + loss_contrast
-
-                # backward and update parameters.
-                loss.backward()
-                optimizer.step()
-
-                ####### Right now Keep this part unmodified
-                model.eval()
-                out_train, _ = model(input_train)
-                out_train = torch.clamp(out_train, 0., 1.)
-                psnr_train = batch_PSNR(out_train, target_train, 1.)
-                if i % 50 == 0:
-                    print("[epoch %d][%d/%d] loss: %.4f, pixel_metric: %.4f, PSNR: %.4f" %
-                      (epoch + 1, i + 1, len(loader_train), loss.item(), pixel_metric.item(), psnr_train))
-
-        if opt.use_stage2:
-            # Phase 2 Training (Real images)
-            for i, (input_train_real, _) in enumerate(imgLoader, 0):
-                model.train()
-                model.zero_grad()
-                optimizer.zero_grad()
-
-                input_train_real = Variable(input_train_real).to(device)
-
-                # Obtain the derained image and calculate ssim loss
-                out_train_real, _ = model(input_train_real)
-
-                # Segmentation loss
-                seg_loss = SegLoss(out_train_real)
-
-                # backward and update parameters.
-                seg_loss.backward()
-                optimizer.step()
-
-                if i % 50 == 0:
-                    print("[epoch %d][%d/%d] loss: %.4f" %
-                      (epoch + 1, i + 1, len(imgLoader), seg_loss.item()))
-
-        # save model
-        torch.save(model.state_dict(), os.path.join(opt.save_path, 'net_latest.pth'))
-        if epoch % opt.save_freq == 0:
-            torch.save(model.state_dict(), os.path.join(opt.save_path, 'net_epoch%d.pth' % (epoch+1)))
+    print('Avg. time:', time_test/count)
 
 
 if __name__ == "__main__":
-    train()
+    test()
