@@ -72,7 +72,7 @@ def train():
                            shuffle=True)
 
     # Build deraining model
-    model = SAPNet(recurrent_iter=opt.recurrent_iter, use_ghost=opt.use_ghost).to(device)
+    model = SAPNet(recurrent_iter=opt.recurrent_iter, use_dilation=opt.use_dilation).to(device)
     model = nn.DataParallel(model, device_ids=device_ids)
     print_network(model)
 
