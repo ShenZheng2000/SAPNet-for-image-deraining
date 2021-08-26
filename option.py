@@ -21,13 +21,17 @@ parser.add_argument("--data_path", type=str, default="datasets/train/RainTrainH"
 parser.add_argument("--data_path_real", type=str, default="D:/Code/AAAI_2022/datasets/real_input",
                     help='path to real rainy training data')
 parser.add_argument("--use_contrast", type=bool, default=True,
-                    help='use contrasive loss or not') # TODO: ablation on this
+                    help='use contrasive loss or not')
 parser.add_argument("--use_stage1", type=bool, default=True,
-                    help='use stage1: train on synthesized image') # TODO: ablation on this (more or less)
-parser.add_argument("--use_stage2", type=bool, default=True,
-                    help='use stage2: train on real image') # TODO: ablation on this (yes or no, more or less)
+                    help='use stage1: train on synthesized image')
+parser.add_argument("--use_stage2", type=bool, default=False,
+                    help='use stage2: train on real image')
 parser.add_argument("--use_ghost", type=bool, default=False,
-                    help='use (multi-scale) ghost block or not')
+                    help='use ghost block or not')
+parser.add_argument("--use_multi", type=bool, default=False,
+                    help='use multi-scale (ghost) block or not')
+parser.add_argument("--use_dilation", type=bool, default=True,
+                    help='use dilation or not')
 
 # For model only
 parser.add_argument("--recurrent_iter", type=int, default=6, help='number of recursive stages')  # TODO: ablation on this
