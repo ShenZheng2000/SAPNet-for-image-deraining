@@ -5,16 +5,18 @@ import time
 from option import *
 
 def test():
-    '''if torch.cuda.is_available():
-        os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu_id'''
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    device_ids = [Id for Id in range(torch.cuda.device_count())]
 
     os.makedirs(opt.output_path, exist_ok=True)
 
     # Build model
     print('Loading model ...\n')
-    model = SAPNet(recurrent_iter=opt.recurrent_iter, use_ghost=opt.use_ghost).to(device)
+    model = SAPNet(recurrent_iter=opt.recurrent_iter,
+                   use_dilation=opt.use_dilation).to(device)
     print_network(model)
     model = model.to(device)
     model = nn.DataParallel(model, device_ids=device_ids)
