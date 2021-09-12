@@ -148,9 +148,6 @@ def Laplacian(x):
     return frame
 
 
-# Define the canny matrix
-
-
 # Define the modified mse loss
 def inference_mse_loss(frame_hr, frame_sr):
     #content_base_loss = tf.reduce_mean(tf.sqrt((frame_hr - frame_sr) ** 2 + (1e-3) ** 2))
