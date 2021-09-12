@@ -1,10 +1,12 @@
 # SAPNet
 
 This repository contains the official Pytorch implementation of the paper:
-"SAPNet: Segmentation-Aware Progressive Network for Single Image Deraining"
+"SAPNet: Segmentation-Aware Progressive Network for Contrastive Image Deraining"
 
 # Abstract
-Removing rains from an image has been an open yet challenging computer vision problem owing to its ill-posed nature. In recent years, deep learning algorithms have achieved notable deraining performances on both the real and synthetic rainy dataset. However, most methods only consider low-level image restoration and fail to accommo date real-world demands. Instead, task-driven approaches require paired annotations which are expensive to obtain. In this paper, we propose a segmentation-aware progres sive network (SAPNet) for single image deraining. Firstly, we introduce a recurrent progressive network with a novel channel residual attention (CRA) block. That design al lows us to remove rain streaks progressively with reduced parameters. Secondly, we design an unsupervised rain streak segmentation network (URSS) to outline and sep arate rain streaks. To further restore the edge informa tion of a rain image, we adopt canny edge loss in the cost function. Extensive experiments on the synthetic and real rain images show our model qualitatively and quantitatively outperforms other top-performing models. Notably, our model achieves the best PSNR and SSIM and becomes the new state-of-the-arts for Rain100L, Rain100H, and Rain12 benchmark dataset. We also visually demonstrate that our model aids detection and segmentation with considerable efficacy. A Pytorch implementation will be publicly avail able.
+Removing rains from an image has been an open yet challenging computer vision task. Recently, deep learning algorithms have achieved promising deraining performances on both the natural and synthetic rainy datasets. However, most existing methods only consider low-level image restoration, limiting their high-level detection and segmentation applications. Instead, task-driven approaches require heavy amounts of paired annotations that are expensive to obtain and hard to generalize. Furthermore, previous image deraining methods only use groundtruth images for supervised training and neglect the background details in the original rainy image.
+
+This paper presents a segmentation-aware progressive network (SAPNet) based upon contrastive learning for single image deraining. We first introduce a recurrent progressive network with a new channel residual attention (CRA) block and dilated convolution. This architecture allows us to characterize multi-scale rain streaks progressively with affordable model size. Secondly, we design an unsupervised background segmentation network (UBS) to preserve the semantic information of an image during intensive rain removal. Finally, we introduce a novel perceptual contrastive loss (PCL) to ensure that the derained image is pulled to the groundtruth and is pushed from the rainy images in the VGG-16 latent space. Comprehensive experiments on synthetic and real-world rainy datasets show our model surpasses top-performing methods qualitatively and quantitatively. We also demonstrate that our model aids object detection and semantic segmentation with considerable efficacy. 
 
 
 # Preparing Dataset
@@ -19,7 +21,8 @@ Run the following script in terminal
 `python train.py`
 
 # Testing
-TO DO
+Run the following script in terminal
+`bash main.sh`
 
 # Citation
 TO DO
