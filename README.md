@@ -24,5 +24,8 @@ Run the following script in terminal
 Run the following script in terminal
 `bash main.sh`
 
+# Sample Visual Comparisons 
+TODO
+
 # Citation
-TO DO
+TODO
