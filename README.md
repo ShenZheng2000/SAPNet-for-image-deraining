@@ -41,8 +41,17 @@ bash main.sh
 | save_freq  | int   | 1                   |             |
 
 ## Train/Test Hypeparameters
-
-## Model Hyperparameters
+| Name            | Type | Default                   | Description |
+|-----------------|------|---------------------------|-------------|
+| test_data_path  | str  | datasets/test/Rain100H    |             |
+| output_path     | str  | results/Rain100H/Model11  |             |
+| data_path       | str  | datasets/train/RainTrainH |             |
+| use_contrast    | bool | True                      |             |
+| use_seg_stage1  | bool | True                      |             |
+| use_stage1      | bool | True                      |             |
+| use_dilation    | bool | True                      |             |
+| recurrent_iter  | int  | 6                         |             |
+| num_of_SegClass | int  | 21                        |             |
 
 
 # Sample Visual Comparisons 
