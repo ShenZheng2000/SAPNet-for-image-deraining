@@ -28,6 +28,23 @@ Run the following script in terminal
 bash main.sh
 ```
 
+# Hyperparameters
+## General Hyperparameters
+| Name       | Type  | Default             | Description |
+|------------|-------|---------------------|-------------|
+| preprocess | bool  | False               |             |
+| batch_size | int   | 12                  |             |
+| epochs     | int   | 100                 |             |
+| milestone  | int   | [30,50,80]          |             |
+| lr         | float | 0.001               |             |
+| save_path  | str   | logs/SAPNet/Model11 |             |
+| save_freq  | int   | 1                   |             |
+
+## Train/Test Hypeparameters
+
+## Model Hyperparameters
+
+
 # Sample Visual Comparisons 
 TODO
 
