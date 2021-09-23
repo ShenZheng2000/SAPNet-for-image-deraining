@@ -6,7 +6,7 @@ This repository contains the official Pytorch implementation of the paper:
 # Abstract
 Removing rains from an image has been an open yet challenging computer vision task. Recently, deep learning algorithms have achieved promising deraining performances on both the natural and synthetic rainy datasets. However, most existing methods only consider low-level image restoration, limiting their high-level detection and segmentation applications. Instead, task-driven approaches require heavy amounts of paired annotations that are expensive to obtain and hard to generalize. Furthermore, previous image deraining methods only use groundtruth images for supervised training and neglect the background details in the original rainy image.
 
-This paper presents a segmentation-aware progressive network (SAPNet) based upon contrastive learning for single image deraining. We first introduce a recurrent progressive network with a new channel residual attention (CRA) block and dilated convolution. This architecture allows us to characterize multi-scale rain streaks progressively with affordable model size. Secondly, we design an unsupervised background segmentation network (UBS) to preserve the semantic information of an image during intensive rain removal. Finally, we introduce a novel perceptual contrastive loss (PCL) to ensure that the derained image is pulled to the groundtruth and is pushed from the rainy images in the VGG-16 latent space. Comprehensive experiments on synthetic and real-world rainy datasets show our model surpasses top-performing methods qualitatively and quantitatively. We also demonstrate that our model aids object detection and semantic segmentation with considerable efficacy. 
+This paper presents a **s**egmentation-**a**ware **p**rogressive **net**work (SAPNet) based upon contrastive learning for single image deraining. We first introduce a recurrent progressive network with a new **channel residual attention** (CRA) block and dilated convolution. This architecture allows us to characterize multi-scale rain streaks progressively with affordable model size. Secondly, we design an **unsupervised background segmentation** network (UBS) to preserve the semantic information of an image during intensive rain removal. Finally, we introduce a novel **perceptual contrastive loss** (PCL) to ensure that the derained image is pulled to the groundtruth and is pushed from the rainy images in the VGG-16 latent space. Comprehensive experiments on synthetic and real-world rainy datasets show our model surpasses top-performing methods qualitatively and quantitatively. We also demonstrate that our model aids object detection and semantic segmentation with considerable efficacy. 
 
 
 # Preparing Dataset
@@ -18,11 +18,15 @@ Next, create new folders called dataset. Then create sub-folders called train an
 
 # Training
 Run the following script in terminal
-`python train.py`
+```
+python train.py
+```
 
 # Testing
 Run the following script in terminal
-`bash main.sh`
+```
+bash main.sh
+```
 
 # Sample Visual Comparisons 
 TODO
