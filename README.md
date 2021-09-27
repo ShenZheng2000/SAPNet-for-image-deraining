@@ -60,7 +60,7 @@ Please reach zhengsh@kean.edu for further questions. You can also open an issue 
 This repository is borrowed heavily from [PreNet](https://github.com/csdwren/PReNet). Thanks for sharing!
 
 # TODO List
-- [ ] Upload Pretrained Weight 
+- [] Upload Pretrained Weight 
 - [ ] Add Visual Comparisons
 - [ ] Add References
 - [ ] Upload Arxiv Link
