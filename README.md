@@ -53,9 +53,15 @@ bash main.sh
 | recurrent_iter  | int  | 6                         |             |
 | num_of_SegClass | int  | 21                        |             |
 
+# Contact
+Please reach zhengsh@kean.edu for further questions. You can also open an issue (prefered) or a pull request in this Github repository 
 
-# Sample Visual Comparisons 
-TODO
+# Acknowledgement
+This repository is borrowed heavily from [PreNet](https://github.com/csdwren/PReNet). Thanks for sharing!
 
-# Citation
-TODO
+# TODO List
+- [ ] Upload Pretrained Weight 
+- [ ] Add Visual Comparisons
+- [ ] Add References
+- [ ] Upload Arxiv Link
+- [ ] Upload BibTeX
