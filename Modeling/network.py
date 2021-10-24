@@ -1,11 +1,38 @@
+# PyTorch lib
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import math
-import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Depthwise Separable Convolution
+class CSDN_Tem(nn.Module):
+    def __init__(self, in_ch, out_ch, kernel_size=3, stride=1, padding=1, dilation=1):
+        super(CSDN_Tem, self).__init__()
+        self.depth_conv = nn.Conv2d(
+            in_channels=in_ch,
+            out_channels=in_ch,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=in_ch
+        )
+        self.point_conv = nn.Conv2d(
+            in_channels=in_ch,
+            out_channels=out_ch,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            groups=1
+        )
+
+    def forward(self, input):
+        out = self.depth_conv(input)
+        out = self.point_conv(out)
+        return out
 
 
 # Channel Attention
@@ -51,6 +78,28 @@ class CRALayer(nn.Module):
         y = self.sigmoid(y)
         return x * y
 
+# Pixel Residual Attention Layer
+class PRALayer(nn.Module):
+    def __init__(self, channel, reduction):
+        super(PRALayer, self).__init__()
+        # Feature Channel Rescale
+        self.conv_du = nn.Sequential(
+            nn.Conv2d(channel, channel // reduction, 1, padding=0, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channel // reduction, channel, 1, padding=0, bias=False),
+        )
+        # 1 X 1 Convolution inside Skip Connection
+        self.conv_1_1 = nn.Conv2d(channel, channel, 1, padding=0, bias=False)
+        # Sigmoid Activation
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        res = self.conv_1_1(x)
+        y = self.conv_du(x)
+        y += res
+        y = self.sigmoid(y)
+        return x * y
+
 
 
 class SAPNet(nn.Module):
@@ -65,12 +114,10 @@ class SAPNet(nn.Module):
 
         if self.use_dilation:
             dilation = [1, 2, 4, 8, 16]
-            padding = [1, 2, 4, 8, 16]
+            padding = dilation
         else:
             dilation = [1, 1, 1, 1, 1]
-            padding = [1, 1, 1, 1, 1]
-
-        print("dilation last is", dilation[4])
+            padding = dilation
 
         if self.use_DSC:
             self.block = CSDN_Tem
@@ -78,52 +125,52 @@ class SAPNet(nn.Module):
             self.block = nn.Conv2d
 
         self.conv0 = nn.Sequential(
-            nn.Conv2d(6, 32, 3, 1, 1),
+            self.block(6, 32, 3, 1, 1),
             nn.ReLU()
         )
 
         # Residual Attention block
         self.res_conv1 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, padding=padding[0], dilation=dilation[0]),
+            self.block(32, 32, 3, 1, padding=padding[0], dilation=dilation[0]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, padding=padding[0], dilation=dilation[0]),
+            self.block(32, 32, 3, 1, padding=padding[0], dilation=dilation[0]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU()
         )
 
         self.res_conv2 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, padding=padding[1], dilation=dilation[1]),
+            self.block(32, 32, 3, 1, padding=padding[1], dilation=dilation[1]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, padding=padding[1], dilation=dilation[1]),
+            self.block(32, 32, 3, 1, padding=padding[1], dilation=dilation[1]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU()
         )
 
         self.res_conv3 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, padding=padding[2], dilation=dilation[2]),
+            self.block(32, 32, 3, 1, padding=padding[2], dilation=dilation[2]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, padding=padding[2], dilation=dilation[2]),
+            self.block(32, 32, 3, 1, padding=padding[2], dilation=dilation[2]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU()
         )
 
         self.res_conv4 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, padding=padding[3], dilation=dilation[3]),
+            self.block(32, 32, 3, 1, padding=padding[3], dilation=dilation[3]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, padding=padding[3], dilation=dilation[3]),
+            self.block(32, 32, 3, 1, padding=padding[3], dilation=dilation[3]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU()
         )
 
         self.res_conv5 = nn.Sequential(
-            nn.Conv2d(32, 32, 3, 1, padding=padding[4], dilation=dilation[4]),
+            self.block(32, 32, 3, 1, padding=padding[4], dilation=dilation[4]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU(),
-            nn.Conv2d(32, 32, 3, 1, padding=padding[4], dilation=dilation[4]),
+            self.block(32, 32, 3, 1, padding=padding[4], dilation=dilation[4]),
             CRALayer(channel=32, reduction=16),
             nn.ReLU()
         )
@@ -189,6 +236,10 @@ class SAPNet(nn.Module):
             x_list.append(x)
 
         return x, x_list
+
+
+
+
 
 
 
