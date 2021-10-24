@@ -3,9 +3,35 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-import math
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+class Split_Dilation(nn.Module):
+    def __init__(self,
+                 in_ch=32,
+                 out_ch=32,
+                 kernel_size=3,
+                 stride=1,
+                 padding=1,
+                 dilation=1,
+                 spl=2
+                 ):
+        super(Split_Dilation, self).__init__()
+        self.in_ch = in_ch
+        self.out_ch = out_ch
+        self.spl = spl
+        self.custom_conv1 = nn.Conv2d(self.in_ch//self.spl, self.out_ch//self.spl, kernel_size, stride, padding, dilation)
+        self.custom_conv2 = nn.Conv2d(self.in_ch // self.spl, self.out_ch // self.spl, kernel_size, stride, padding, dilation)
+
+    def forward(self, input):
+        input_split = torch.split(input, [self.in_ch // self.spl, self.out_ch // self.spl], dim=1)
+        # Run inference
+        s0 = self.custom_conv1(input_split[0])
+        s1 = self.custom_conv2(input_split[1])
+        # concat tensor
+        out = torch.cat((s0, s1), dim=1)
+        return out
+
 
 # Depthwise Separable Convolution
 class CSDN_Tem(nn.Module):
@@ -33,7 +59,6 @@ class CSDN_Tem(nn.Module):
         out = self.depth_conv(input)
         out = self.point_conv(out)
         return out
-
 
 # Channel Attention
 class CALayer(nn.Module):
@@ -78,39 +103,18 @@ class CRALayer(nn.Module):
         y = self.sigmoid(y)
         return x * y
 
-# Pixel Residual Attention Layer
-class PRALayer(nn.Module):
-    def __init__(self, channel, reduction):
-        super(PRALayer, self).__init__()
-        # Feature Channel Rescale
-        self.conv_du = nn.Sequential(
-            nn.Conv2d(channel, channel // reduction, 1, padding=0, bias=False),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(channel // reduction, channel, 1, padding=0, bias=False),
-        )
-        # 1 X 1 Convolution inside Skip Connection
-        self.conv_1_1 = nn.Conv2d(channel, channel, 1, padding=0, bias=False)
-        # Sigmoid Activation
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        res = self.conv_1_1(x)
-        y = self.conv_du(x)
-        y += res
-        y = self.sigmoid(y)
-        return x * y
-
-
 
 class SAPNet(nn.Module):
     def __init__(self,
                  recurrent_iter=6,
-                 use_dilation = False,
-                 use_DSC = False):
+                 use_dilation = True,
+                 use_DSC = False,
+                 use_split = True): # TODO: use_split = False or True,
         super(SAPNet, self).__init__()
         self.iteration = recurrent_iter
         self.use_dilation = use_dilation
         self.use_DSC = use_DSC
+        self.use_split = use_split
 
         if self.use_dilation:
             dilation = [1, 2, 4, 8, 16]
@@ -121,11 +125,14 @@ class SAPNet(nn.Module):
 
         if self.use_DSC:
             self.block = CSDN_Tem
-        else:
-            self.block = nn.Conv2d
+        elif self.use_dilation:
+            if self.use_split:
+                self.block = Split_Dilation
+            else:
+                self.block = nn.Conv2d
 
         self.conv0 = nn.Sequential(
-            self.block(6, 32, 3, 1, 1),
+            nn.Conv2d(6, 32, 3, 1, 1),
             nn.ReLU()
         )
 
@@ -238,8 +245,8 @@ class SAPNet(nn.Module):
         return x, x_list
 
 
-
-
-
-
-
+if __name__ == '__main__':
+    input = torch.rand(1, 3, 100, 100)
+    model = SAPNet()
+    output, _ = model(input)
+    print(output.size())
