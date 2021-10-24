@@ -65,7 +65,8 @@ def train():
 
     # Build deraining model
     model = SAPNet(recurrent_iter=opt.recurrent_iter,
-                   use_dilation=opt.use_dilation).to(device)
+                   use_dilation=opt.use_dilation,
+                   use_split=opt.use_split).to(device)
     model = nn.DataParallel(model, device_ids=device_ids)
     print_network(model)
 
