@@ -64,7 +64,7 @@ This repository is borrowed heavily from [PreNet](https://github.com/csdwren/PRe
 
 # TODO List
 - [x] Upload Pretrained Weight 
+- [x] Upload Arxiv Link
 - [ ] Add Visual Comparisons
 - [ ] Add References
-- [ ] Upload Arxiv Link
 - [ ] Upload BibTeX
