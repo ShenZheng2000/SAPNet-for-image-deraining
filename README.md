@@ -4,7 +4,7 @@ This repository contains the official Pytorch implementation of the paper:
 "SAPNet: Segmentation-Aware Progressive Network for Perceptual Contrastive Image Deraining"
 
 # Updates: 
-**Code will be updated at 2021/11/23**
+**Thanks for your patience. We will update the code in Late November**
 
 **Arxiv Link is available at https://arxiv.org/abs/2111.08892 **
 
