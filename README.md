@@ -80,6 +80,7 @@ This repository is borrowed heavily from [PreNet](https://github.com/csdwren/PRe
 - [x] Upload Arxiv Link
 - [x] Upload BibTeX
 - [ ] Update Code
+- [ ] Upload Model Architecture
 - [ ] Upload Visual Comparisons
 - [ ] Testing on Video
 - [ ] Upload Pretrained Weight 
