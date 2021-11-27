@@ -5,6 +5,7 @@ This repository contains the official Pytorch implementation of the paper:
 "SAPNet: Segmentation-Aware Progressive Network for Perceptual Contrastive Image Deraining"
 
 # Updates: 
+- 2021.11.27: Code with Lpis loss has been updated.
 - 2021.11.27: The video deraining result at challenging night-time conditions is at [youtube](https://www.youtube.com/watch?v=tJSsICHpsfs)
 - 2021.11.17: Arxiv Link is available at https://arxiv.org/abs/2111.08892
 
