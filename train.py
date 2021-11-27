@@ -107,20 +107,35 @@ def train():
                 #print("out_train", out_train.size()) # torch.Size([batch_size, 3, 100, 100])
 
                 pixel_metric = criterion(target_train, out_train)
+                
+                # calculate lpis loss
+                new_out_train = (torch.max(out_train)-out_train)/(torch.max(out_train)-torch.min(out_train))
+                new_target_train = (torch.max(target_train)-target_train)/(torch.max(target_train)-torch.min(target_train))
+                resize = transforms.Resize([256, 256])
+                new_target_train = resize(new_target_train)
+                new_out_train = resize(new_out_train)
+
+                loss_fn_vgg = lpips.LPIPS(net='alex').to(device)
+                lpips_num = 0
+                for ii in range(len(new_out_train)):
+                    outtrain = new_out_train[ii].reshape((1,3,256,256))
+                    targettrain = new_target_train[ii].reshape((1,3,256,256))
+                    lpips_num += float(loss_fn_vgg(targettrain.to(device), outtrain.to(device)))
 
                 # Negative SSIM loss
                 loss_ssim = -pixel_metric
-                #print("loss_ssim", loss_ssim)
 
                 # Constrative loss
                 loss_contrast = loss_C(out_train, target_train, input_train) if opt.use_contrast else 0
-                #print("loss_contrast", loss_contrast)
+                           
+                # LPIS loss
+                loss_lpis = lpips_num if opt.use_lpis else 0
 
                 # Segmentation loss
                 loss_seg = SegLoss(out_train, device, device_ids) if (opt.use_seg_stage1 and epoch > 50) else 0
 
                 # Total loss
-                loss = loss_ssim + 0.1 * loss_contrast + 0.1 * loss_seg
+                loss = loss_ssim + 0.1 * loss_contrast + 0.1 * loss_lpis + 0.1 * loss_seg 
 
                 # backward and update parameters.
                 loss.backward()
