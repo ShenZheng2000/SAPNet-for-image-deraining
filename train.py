@@ -126,10 +126,10 @@ def train():
                 loss_ssim = -pixel_metric
 
                 # Constrative loss
-                loss_contrast = loss_C(out_train, target_train, input_train) if opt.use_contrast else 0
+                loss_contrast = 10 * loss_C(out_train, target_train, input_train) if opt.use_contrast else 0 # scale the contrast loss
                            
                 # LPIS loss
-                loss_lpis = lpips_num if opt.use_lpis else 0
+                loss_lpis = 10 * lpips_num if opt.use_lpis else 0 # scale the lpips loss
 
                 # Segmentation loss
                 loss_seg = SegLoss(out_train, device, device_ids) if (opt.use_seg_stage1 and epoch > 50) else 0
