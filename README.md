@@ -57,6 +57,17 @@ bash main.sh
 | recurrent_iter  | int  | 6                         |             |
 | num_of_SegClass | int  | 21                        |             |
 
+# Citations
+Please cite the following if you find this repository helpful. 
+```
+@article{zheng2021sapnet,
+  title={SAPNet: Segmentation-Aware Progressive Network for Perceptual Contrastive Deraining},
+  author={Zheng, Shen and Lu, Changjie and Wu, Yuxiong and Gupta, Gaurav},
+  journal={arXiv preprint arXiv:2111.08892},
+  year={2021}
+}
+```
+
 # Contact
 Please reach zhengsh@kean.edu for further questions. You can also open an issue (prefered) or a pull request in this Github repository 
 
@@ -64,8 +75,13 @@ Please reach zhengsh@kean.edu for further questions. You can also open an issue 
 This repository is borrowed heavily from [PreNet](https://github.com/csdwren/PReNet). Thanks for sharing!
 
 # TODO List
-- [x] Upload Pretrained Weight 
+- [x] List (important) hyperparameters
+- [x] Upload Testing Dataset
 - [x] Upload Arxiv Link
-- [ ] Add Visual Comparisons
-- [ ] Add References
-- [ ] Upload BibTeX
+- [x] Upload BibTeX
+- [ ] Update Code
+- [ ] Upload Visual Comparisons
+- [ ] Testing on Video
+- [ ] Upload Pretrained Weight 
+
+
