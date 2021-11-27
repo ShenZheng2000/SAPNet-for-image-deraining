@@ -13,10 +13,13 @@ Deep learning algorithms have recently achieved promising deraining performances
 
 # Prerequisites
 * Windows or Linux
+* CUDA 10.0, or CPU
 * Python 3.6+
 * Pytorch 1.2+
 * torchvision 0.4+
 * opencv-python
+* scikit-image
+* numpy
 
 # Preparing Dataset
 - Download training and testing dataset from either link 
