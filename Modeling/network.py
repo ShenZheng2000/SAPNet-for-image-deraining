@@ -109,7 +109,7 @@ class SAPNet(nn.Module):
                  recurrent_iter=6,
                  use_dilation = True,
                  use_DSC = False,
-                 use_split = True): # TODO: use_split = False or True,
+                 use_split = False): # TODO: use_split = False or True,
         super(SAPNet, self).__init__()
         self.iteration = recurrent_iter
         self.use_dilation = use_dilation
