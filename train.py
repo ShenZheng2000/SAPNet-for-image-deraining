@@ -35,7 +35,7 @@ def SegLoss(out_train, device, device_ids):
 
 
 def train():
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0" # adjust according to # GPUs you are using
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
