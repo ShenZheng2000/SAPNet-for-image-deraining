@@ -83,7 +83,7 @@ This repository is borrowed heavily from [PreNet](https://github.com/csdwren/PRe
 - [x] Upload Testing Dataset
 - [x] Upload Arxiv Link
 - [x] Upload BibTeX
-- [ ] Add hyperparameter explanation
+- [x] Add hyperparameter explanation
 - [ ] Update Code
 - [ ] Upload Model Architecture
 - [ ] Upload Visual Comparisons
