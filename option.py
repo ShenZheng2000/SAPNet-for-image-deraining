@@ -8,12 +8,12 @@ parser.add_argument("--batch_size", type=int, default=8, help="Training batch si
 parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs")
 parser.add_argument("--milestone", type=int, default=[30, 50, 80], help="When to decay learning rate")
 parser.add_argument("--lr", type=float, default=1e-3, help="initial learning rate")
-parser.add_argument("--save_path", type=str, default="logs/SAPNet/Model2", help='path to save models and log files')
+parser.add_argument("--save_path", type=str, default="logs/SAPNet/Model11", help='path to save models and log files')
 parser.add_argument("--save_freq", type=int, default=1, help='save intermediate model')
 
 # For test only
-parser.add_argument("--test_data_path", type=str, default="datasets/test/custom", help='path to testing data')
-parser.add_argument("--output_path", type=str, default="results/Rain100H/Model2", help='path to save output images')
+parser.add_argument("--test_data_path", type=str, default="datasets/test/Rain100H", help='path to testing data')
+parser.add_argument("--output_path", type=str, default="results/Rain100H/Model11", help='path to save output images')
 
 # For train only
 parser.add_argument("--data_path", type=str, default="datasets/train/RainTrainH",
