@@ -23,11 +23,11 @@ From left to right, Rainy, PreNet (CVPR 2019), MSPFN (CVPR 2020), MPRNet (CVPR 2
 
 <p float="left">
 <p align="middle">
-  <img src="resources/rain-064.jpg" width="160" />
-  <img src="resources/PreNet-064.jpg" width="160" /> 
-  <img src="resources/MSPFN-064.jpg" width="160" />
-  <img src="resources/MPRNet-064.png" width="160" />
-  <img src="resources/Ours-064.jpg" width="160" /> 
+  <img src="resources/rain-064.jpg" width="180" />
+  <img src="resources/PreNet-064.jpg" width="180" /> 
+  <img src="resources/MSPFN-064.jpg" width="180" />
+  <img src="resources/MPRNet-064.png" width="180" />
+  <img src="resources/Ours-064.jpg" width="180" /> 
 </p>
 
 # Comparison on Real-World Rainy Images
@@ -35,11 +35,11 @@ From left to right, Rainy, PreNet (CVPR 2019), MSPFN (CVPR 2020), MPRNet (CVPR 2
 
 <p float="left">
 <p align="middle">
-  <img src="resources/rainy_.jpg" width="160" />
-  <img src="resources/PreNet.jpg" width="160" /> 
-  <img src="resources/MSPFN.jpg" width="160" />
-  <img src="resources/MPRNet.png" width="160" />
-  <img src="resources/ours.jpg" width="160" /> 
+  <img src="resources/rainy_.jpg" width="180" />
+  <img src="resources/PreNet.jpg" width="180" /> 
+  <img src="resources/MSPFN.jpg" width="180" />
+  <img src="resources/MPRNet.png" width="180" />
+  <img src="resources/ours.jpg" width="180" /> 
 </p>
 
 # Prerequisites
