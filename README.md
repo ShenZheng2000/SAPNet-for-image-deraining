@@ -19,11 +19,11 @@ Click the small icon to view the pdf.
 # Comparison on Synthetic Rainy Images
 <p float="left">
 <p align="middle">
-  <img src="resources/rain-064.png" width="250" />
-  <img src="resources/PreNet-064.png" width="250" /> 
-  <img src="resources/MSPFN-064.png" width="250" />
+  <img src="resources/rain-064.jpg" width="250" />
+  <img src="resources/PreNet-064.jpg" width="250" /> 
+  <img src="resources/MSPFN-064.jpg" width="250" />
   <img src="resources/MPRNet-064.png" width="250" />
-  <img src="resources/Ours-064.png" width="250" /> 
+  <img src="resources/Ours-064.jpg" width="250" /> 
 </p>
 
 # Prerequisites
