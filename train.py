@@ -115,7 +115,7 @@ def train():
                 new_target_train = resize(new_target_train)
                 new_out_train = resize(new_out_train)
 
-                loss_fn_vgg = lpips.LPIPS(net='alex').to(device)
+                loss_fn_vgg = lpips.LPIPS(net='alex').to(device) # choose between alexnet, VGG, or others
                 lpips_num = 0
                 for ii in range(len(new_out_train)):
                     outtrain = new_out_train[ii].reshape((1,3,256,256))
