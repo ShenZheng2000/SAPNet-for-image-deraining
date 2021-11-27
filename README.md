@@ -58,9 +58,7 @@ From left to right, Rainy, PreNet (CVPR 2019), MSPFN (CVPR 2020), MPRNet (CVPR 2
 [OneDrive](https://onedrive.live.com/?cid=066ce859ab42dfa2&id=66CE859AB42DFA2%2130078&authkey=%21AIYIy8ZKL9kkmd4)
 
 - Create a new folder called `dataset`.
-
 - Create sub-folders called `train` and `test` under that folder. 
-
 - Place the unzipped folders into `datasets/train/` (training data) and `datasets/test/` (testing data)
 
 # Training
