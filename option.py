@@ -20,17 +20,17 @@ parser.add_argument("--data_path", type=str, default="datasets/train/RainTrainH"
                     help='path to synthesized training data')
 parser.add_argument("--use_contrast", type=bool, default=True,
                     help='use contrasive loss or not')
+parser.add_argument("--use_lpis", type=bool, default=True,
+                    help='use lpis loss or not')
 parser.add_argument("--use_stage1", type=bool, default=True,
                     help='use stage1: train on synthesized image')
-parser.add_argument("--use_stage2", type=bool, default=False,
-                    help='use stage2: train on real image')
+parser.add_argument("--use_seg_stage1", type=bool, default=True,
+                    help='use segmentation loss on STAGE 1')
 parser.add_argument("--use_dilation", type=bool, default=False, # TODO: this must be true before testing
                     help='use dilation or not')
-parser.add_argument("--use_split", type=bool, default=False,
-                    help='use split for dilation or not')
 
 # For model only
-parser.add_argument("--recurrent_iter", type=int, default=6, help='number of recursive stages')  # TODO: ablation on this
+parser.add_argument("--recurrent_iter", type=int, default=6, help='number of recursive stages')  
 parser.add_argument("--num_of_SegClass", type=int, default=21,
                     help='Number of Segmentation Classes, default VOC = 21')
 
