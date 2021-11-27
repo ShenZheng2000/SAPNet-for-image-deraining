@@ -16,7 +16,7 @@ Deep learning algorithms have recently achieved promising deraining performances
 
 <p float="left">
 <p align="middle">
-  <img src="Samples/F1.png" width="800" />
+  <img src="resources/main_figure.pdf" width="800" />
 </p>
 
 # Prerequisites
