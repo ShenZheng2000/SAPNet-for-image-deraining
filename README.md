@@ -18,6 +18,8 @@ Click this following link to view the pdf.
 ![Model Architecture Figure](resources/main_figure.pdf)
 
 # Comparison on Synthetic Rainy Images
+From left to right, Rainy, PreNet (CVPR 2019), MSPFN (CVPR 2020), MPRNet (CVPR 2021), SAPNet (Ours)
+
 <p float="left">
 <p align="middle">
   <img src="resources/rain-064.jpg" width="180" />
@@ -28,6 +30,8 @@ Click this following link to view the pdf.
 </p>
 
 # Comparison on Real-World Rainy Images
+From left to right, Rainy, PreNet (CVPR 2019), MSPFN (CVPR 2020), MPRNet (CVPR 2021), SAPNet (Ours)
+
 <p float="left">
 <p align="middle">
   <img src="resources/rainy_.jpg" width="180" />
