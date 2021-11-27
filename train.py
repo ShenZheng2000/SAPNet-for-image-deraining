@@ -10,6 +10,7 @@ from torchvision import datasets, transforms
 from option import *
 from loss_fun import *
 import torch.nn as nn
+import lpips
 
 def SegLoss(out_train, device, device_ids):
     num_of_SegClass = 21
@@ -32,6 +33,22 @@ def SegLoss(out_train, device, device_ids):
 
     return seg_loss
 
+def LpisLoss(out_train, target_train, device):
+
+    new_out_train = (torch.max(out_train)-out_train)/(torch.max(out_train)-torch.min(out_train))
+    new_target_train = (torch.max(target_train)-target_train)/(torch.max(target_train)-torch.min(target_train))
+    resize = transforms.Resize([256, 256])
+    new_target_train = resize(new_target_train)
+    new_out_train = resize(new_out_train)
+
+    loss_fn_vgg = lpips.LPIPS(net='alex').to(device) # choose between alexnet, VGG, or others
+    lpips_num = 0
+    for ii in range(len(new_out_train)):
+        outtrain = new_out_train[ii].reshape((1,3,256,256))
+        targettrain = new_target_train[ii].reshape((1,3,256,256))
+        lpips_num += float(loss_fn_vgg(targettrain.to(device), outtrain.to(device)))
+
+        return lpips_num
 
 
 def train():
@@ -108,20 +125,6 @@ def train():
 
                 pixel_metric = criterion(target_train, out_train)
                 
-                # calculate lpis loss
-                new_out_train = (torch.max(out_train)-out_train)/(torch.max(out_train)-torch.min(out_train))
-                new_target_train = (torch.max(target_train)-target_train)/(torch.max(target_train)-torch.min(target_train))
-                resize = transforms.Resize([256, 256])
-                new_target_train = resize(new_target_train)
-                new_out_train = resize(new_out_train)
-
-                loss_fn_vgg = lpips.LPIPS(net='alex').to(device) # choose between alexnet, VGG, or others
-                lpips_num = 0
-                for ii in range(len(new_out_train)):
-                    outtrain = new_out_train[ii].reshape((1,3,256,256))
-                    targettrain = new_target_train[ii].reshape((1,3,256,256))
-                    lpips_num += float(loss_fn_vgg(targettrain.to(device), outtrain.to(device)))
-
                 # Negative SSIM loss
                 loss_ssim = -pixel_metric
 
@@ -129,7 +132,7 @@ def train():
                 loss_contrast = 10 * loss_C(out_train, target_train, input_train) if opt.use_contrast else 0 # scale the contrast loss
                            
                 # LPIS loss
-                loss_lpis = 10 * lpips_num if opt.use_lpis else 0 # scale the lpips loss
+                loss_lpis = 10 * LpisLoss(out_train, target_train, device) if opt.use_lpis else 0 # scale the lpips loss
 
                 # Segmentation loss
                 loss_seg = SegLoss(out_train, device, device_ids) if (opt.use_seg_stage1 and epoch > 50) else 0
