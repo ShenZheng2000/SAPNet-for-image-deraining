@@ -1,4 +1,4 @@
-# SAPNet
+# SAPNet for image deraining
 
 This repository contains the official Pytorch implementation of the paper:
 
