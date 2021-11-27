@@ -101,7 +101,7 @@ This repository is borrowed heavily from [PreNet](https://github.com/csdwren/PRe
 - [x] Upload Arxiv Link
 - [x] Upload BibTeX
 - [x] Add hyperparameter explanation
-- [ ] Add Dependencies
+- [x] Add Dependencies
 - [ ] Update Code
 - [ ] Upload Model Architecture
 - [ ] Upload Visual Comparisons
