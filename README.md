@@ -13,7 +13,8 @@ This repository contains the official Pytorch implementation of the paper:
 Deep learning algorithms have recently achieved promising deraining performances on both the natural and synthetic rainy datasets. As an essential low-level pre-processing stage, a deraining network should clear the rain streaks and preserve the fine semantic details. However, most existing methods only consider low-level image restoration. That limits their performances at high-level tasks requiring precise semantic information. To address this issue, in this paper, we present a **segmentation-aware progressive network** (SAPNet) based upon contrastive learning for single image deraining. We start our method with a lightweight derain network formed with **progressive dilated units** (PDU). The PDU can significantly expand the receptive field and characterize multi-scale rain streaks without the heavy computation on multi-scale images. A fundamental aspect of this work is an **unsupervised background segmentation** (UBS) network initialized with ImageNet and Gaussian weights. The UBS can faithfully preserve an image's semantic information and improve the generalization ability to unseen photos. Furthermore, we introduce a **perceptual contrastive loss** (PCL) and a **learned perceptual image similarity loss** (LPISL) to regulate model learning. By exploiting the rainy image and groundtruth as the negative and the positive sample in the VGG-16 latent space, we bridge the fine semantic details between the derained image and the groundtruth in a fully constrained manner. Comprehensive experiments on synthetic and real-world rainy images show our model surpasses top-performing methods and aids object detection and semantic segmentation with considerable efficacy.
 
 # Model Architecture
-Click the small icon to view the pdf.
+Click this following link to view the pdf.
+
 ![Model Architecture Figure](resources/main_figure.pdf)
 
 # Comparison on Synthetic Rainy Images
@@ -24,6 +25,16 @@ Click the small icon to view the pdf.
   <img src="resources/MSPFN-064.jpg" width="180" />
   <img src="resources/MPRNet-064.png" width="180" />
   <img src="resources/Ours-064.jpg" width="180" /> 
+</p>
+
+# Comparison on Real-World Rainy Images
+<p float="left">
+<p align="middle">
+  <img src="resources/rainy_.jpg" width="180" />
+  <img src="resources/PreNet.jpg" width="180" /> 
+  <img src="resources/MSPFN.jpg" width="180" />
+  <img src="resources/MPRNet.png" width="180" />
+  <img src="resources/ours.jpg" width="180" /> 
 </p>
 
 # Prerequisites
