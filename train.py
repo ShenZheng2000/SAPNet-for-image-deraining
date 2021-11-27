@@ -47,6 +47,7 @@ def LpisLoss(out_train, target_train, device):
         outtrain = new_out_train[ii].reshape((1,3,256,256))
         targettrain = new_target_train[ii].reshape((1,3,256,256))
         lpips_num += float(loss_fn_vgg(targettrain.to(device), outtrain.to(device)))
+        lpips_num = lpips_num.to(device)
 
         return lpips_num
 
@@ -129,7 +130,7 @@ def train():
                 loss_ssim = -pixel_metric
 
                 # Constrative loss
-                loss_contrast = 10 * loss_C(out_train, target_train, input_train) if opt.use_contrast else 0 # scale the contrast loss
+                loss_contrast = 4 * loss_C(out_train, target_train, input_train) if opt.use_contrast else 0 # scale the contrast loss
                            
                 # LPIS loss
                 loss_lpis = 10 * LpisLoss(out_train, target_train, device) if opt.use_lpis else 0 # scale the lpips loss
