@@ -65,8 +65,7 @@ def train():
 
     # Build deraining model
     model = SAPNet(recurrent_iter=opt.recurrent_iter,
-                   use_dilation=opt.use_dilation,
-                   use_split=opt.use_split).to(device)
+                   use_dilation=opt.use_dilation).to(device)
     model = nn.DataParallel(model, device_ids=device_ids)
     print_network(model)
 
@@ -77,6 +76,7 @@ def train():
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=opt.lr)
     scheduler = MultiStepLR(optimizer, milestones=opt.milestone, gamma=0.2)  # learning rates
+    # scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,gamma=0.95)
 
     # load the lastest model
     initial_epoch = findLastCheckpoint(save_dir=opt.save_path)
