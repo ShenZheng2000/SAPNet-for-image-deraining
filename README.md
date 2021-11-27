@@ -6,7 +6,7 @@ This repository contains the official Pytorch implementation of the paper:
 
 # Updates: 
 - 2021.11.27: The pretrained weight has been uploaded.
-- 2021.11.27: The video deraining result at challenging night-time conditions is at [youtube](https://www.youtube.com/watch?v=tJSsICHpsfs)
+- 2021.11.27: The video deraining result at challenging night-time conditions is at [Youtube](https://www.youtube.com/watch?v=tJSsICHpsfs)
 - 2021.11.17: Arxiv Link is available at https://arxiv.org/abs/2111.08892
 - 2021.11.10: This work is accepted and will be presented at [WACV 2022](https://wacv2022.thecvf.com/home).
 
