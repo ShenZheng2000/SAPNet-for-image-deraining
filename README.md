@@ -129,9 +129,10 @@ This repository is borrowed heavily from [PreNet](https://github.com/csdwren/PRe
 - [x] Add hyperparameter explanation
 - [x] Add Dependencies
 - [x] Update Code with lpis loss
-- [ ] Upload Model Architecture Figure
-- [ ] Upload Visual Comparisons
-- [ ] Testing on Video
-- [ ] Upload Pretrained Weight 
+- [x] Upload Model Architecture Figure
+- [x] Upload Visual Comparisons
+- [x] Testing on Video
+- [x] Upload Pretrained Weight 
+- [ ] Finalize readme
 
 
