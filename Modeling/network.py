@@ -130,6 +130,8 @@ class SAPNet(nn.Module):
                 self.block = Split_Dilation
             else:
                 self.block = nn.Conv2d
+        else:
+            self.block = nn.Conv2d
 
         self.conv0 = nn.Sequential(
             nn.Conv2d(6, 32, 3, 1, 1),
