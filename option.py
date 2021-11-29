@@ -26,7 +26,7 @@ parser.add_argument("--use_stage1", type=bool, default=True,
                     help='use stage1: train on synthesized image')
 parser.add_argument("--use_seg_stage1", type=bool, default=True,
                     help='use segmentation loss on STAGE 1')
-parser.add_argument("--use_dilation", type=bool, default=False, # TODO: this must be true before testing
+parser.add_argument("--use_dilation", type=bool, default=True, # TODO: this must be true before testing
                     help='use dilation or not')
 
 # For model only
