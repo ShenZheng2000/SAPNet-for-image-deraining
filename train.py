@@ -12,6 +12,8 @@ from loss_fun import *
 import torch.nn as nn
 import lpips
 
+loss_fn_vgg = lpips.LPIPS(net='alex').to(device) # choose between alexnet, VGG, or others
+
 def SegLoss(out_train, device, device_ids):
     num_of_SegClass = 21
     seg = fpn(num_of_SegClass).to(device)
@@ -40,14 +42,12 @@ def LpisLoss(out_train, target_train, device):
     resize = transforms.Resize([256, 256])
     new_target_train = resize(new_target_train)
     new_out_train = resize(new_out_train)
-
-    loss_fn_vgg = lpips.LPIPS(net='alex').to(device) # choose between alexnet, VGG, or others
     lpips_num = 0
     for ii in range(len(new_out_train)):
         outtrain = new_out_train[ii].reshape((1,3,256,256))
         targettrain = new_target_train[ii].reshape((1,3,256,256))
         lpips_num += float(loss_fn_vgg(targettrain.to(device), outtrain.to(device)))
-        lpips_num = lpips_num.to(device)
+        lpips_num = torch.tensor(lpips_num).to(device)
 
         return lpips_num
 
