@@ -110,11 +110,12 @@ python test.py \
 # Citations
 Please cite the following if you find this repository helpful. 
 ```
-@article{zheng2021sapnet,
+@inproceedings{zheng2022sapnet,
   title={SAPNet: Segmentation-Aware Progressive Network for Perceptual Contrastive Deraining},
   author={Zheng, Shen and Lu, Changjie and Wu, Yuxiong and Gupta, Gaurav},
-  journal={arXiv preprint arXiv:2111.08892},
-  year={2021}
+  booktitle={Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision},
+  pages={52--62},
+  year={2022}
 }
 ```
 
