@@ -4,6 +4,7 @@ import re
 import torch.nn as nn
 import numpy as np
 from skimage.measure.simple_metrics import compare_psnr
+# from skimage.metrics import peak_signal_noise_ratio # NOTE: use this for the latest sklearn version
 import os
 import glob
 import torch.nn.functional as F
@@ -28,6 +29,7 @@ def batch_PSNR(img, imclean, data_range):
     PSNR = 0
     for i in range(Img.shape[0]):
         PSNR += compare_psnr(Iclean[i,:,:,:], Img[i,:,:,:], data_range=data_range)
+        # PSNR += peak_signal_noise_ratio(Iclean[i,:,:,:], Img[i,:,:,:], data_range=data_range) # NOTE: use this for the latest sklearn version
     return (PSNR/Img.shape[0])
 
 
