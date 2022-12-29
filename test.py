@@ -50,7 +50,7 @@ def test():
                 dur_time = end_time - start_time
                 time_test += dur_time
 
-                print(img_name, ': ', dur_time)
+                # print(img_name, ': ', dur_time)
 
             if torch.cuda.is_available():
                 save_out = np.uint8(255 * out.data.cpu().numpy().squeeze())   #back to cpu
