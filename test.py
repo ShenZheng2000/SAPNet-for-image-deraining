@@ -15,7 +15,7 @@ def test():
     print('Loading model ...\n')
     model = SAPNet(recurrent_iter=opt.recurrent_iter,
                    use_dilation=opt.use_dilation).to(device)
-    print_network(model)
+    # print_network(model)
     model = model.to(device)
     model = nn.DataParallel(model, device_ids=device_ids)
     model.load_state_dict(torch.load(os.path.join(opt.save_path, 'net_latest.pth'), map_location=device))
