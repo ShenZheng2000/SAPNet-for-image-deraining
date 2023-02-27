@@ -154,6 +154,7 @@ def train():
                       (epoch + 1, i + 1, len(loader_train), loss.item(), pixel_metric.item(), psnr_train))
 
         # save model
+        os.makedirs(opt.save_path, exist_ok=True)
         torch.save(model.state_dict(), os.path.join(opt.save_path, 'net_latest.pth'))
         if epoch % opt.save_freq == 0:
             torch.save(model.state_dict(), os.path.join(opt.save_path, 'net_epoch%d.pth' % (epoch+1)))
